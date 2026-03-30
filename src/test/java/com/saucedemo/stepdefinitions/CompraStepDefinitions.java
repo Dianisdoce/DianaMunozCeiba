@@ -1,56 +1,75 @@
 package com.saucedemo.stepdefinitions;
 
+import com.saucedemo.questions.ElMensaje;
+import com.saucedemo.tasks.Autenticarse;
+import com.saucedemo.tasks.FinalizarCompra;
+import com.saucedemo.tasks.SeleccionarProducto;
 import io.cucumber.datatable.DataTable;
+import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import net.serenitybdd.annotations.Managed;
+import net.serenitybdd.screenplay.actions.Open;
+import net.serenitybdd.screenplay.actors.OnStage;
+import net.serenitybdd.screenplay.actors.OnlineCast;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
 
 import java.util.List;
 import java.util.Map;
 
+import static net.serenitybdd.screenplay.actors.OnStage.theActorCalled;
+import static net.serenitybdd.screenplay.actors.OnStage.theActorInTheSpotlight;
+
 public class CompraStepDefinitions {
 
-    @Managed
-    WebDriver driver;
+    @Before
+    public void setTheStage() {
+        OnStage.setTheStage(new OnlineCast());
+    }
 
     @Given("que el usuario abre la página de SauceDemo")
     public void queElUsuarioAbreLaPaginaDeSauceDemo() {
-        driver.get("https://www.saucedemo.com/");
+        theActorCalled("Diana").attemptsTo(
+                Open.url("https://www.saucedemo.com/")
+        );
     }
 
     @When("el usuario ingresa sus credenciales")
     public void elUsuarioIngresaSusCredenciales(DataTable dataTable) {
         List<Map<String, String>> data = dataTable.asMaps(String.class, String.class);
-        driver.findElement(By.xpath("//input[contains(@id, 'user-name')]")).sendKeys(data.get(0).get("username"));
-        driver.findElement(By.xpath("//input[contains(@name, 'password')]")).sendKeys(data.get(0).get("password"));
-        driver.findElement(By.xpath("//input[@type='submit' or contains(@id, 'login')]")).click();
+
+        theActorInTheSpotlight().attemptsTo(
+                Autenticarse.conCredenciales(data.get(0).get("username"), data.get(0).get("password"))
+        );
     }
 
     @When("agrega el producto {string} al carrito")
     public void agregaElProductoAlCarrito(String producto) {
-        String xpathProducto = "//div[text()='" + producto + "']/ancestor::div[@class='inventory_item_description']//button";
-        driver.findElement(By.xpath(xpathProducto)).click();
-        driver.findElement(By.xpath("//a[contains(@class, 'shopping_cart_link')]")).click();
-        driver.findElement(By.xpath("//button[contains(@id, 'checkout') or text()='Checkout']")).click();
+        theActorInTheSpotlight().attemptsTo(
+                SeleccionarProducto.conNombre(producto)
+        );
     }
 
     @When("completa el proceso de checkout con sus datos de contacto")
     public void completaElProcesoDeCheckoutConSusDatosDeContacto(DataTable dataTable) {
         List<Map<String, String>> data = dataTable.asMaps(String.class, String.class);
-        driver.findElement(By.xpath("//input[contains(@id, 'first-name')]")).sendKeys(data.get(0).get("firstName"));
-        driver.findElement(By.xpath("//input[contains(@name, 'lastName')]")).sendKeys(data.get(0).get("lastName"));
-        driver.findElement(By.xpath("//input[starts-with(@id, 'postal')]")).sendKeys(data.get(0).get("zipCode"));
-        driver.findElement(By.xpath("//input[@type='submit' or @id='continue']")).click();
-        driver.findElement(By.xpath("//button[contains(@id, 'finish') or text()='Finish']")).click();
+
+        theActorInTheSpotlight().attemptsTo(
+                FinalizarCompra.conDatos(
+                        data.get(0).get("firstName"),
+                        data.get(0).get("lastName"),
+                        data.get(0).get("zipCode")
+                )
+        );
     }
 
     @Then("debe ver el mensaje de confirmación {string}")
     public void debeVerElMensajeDeConfirmacion(String mensajeEsperado) {
-        String mensajeReal = driver.findElement(By.xpath("//h2[contains(@class, 'complete-header')]")).getText();
-        try { Thread.sleep(2000); } catch (InterruptedException e) {}
-        assert mensajeReal.equals(mensajeEsperado);
+        theActorInTheSpotlight().should(
+                net.serenitybdd.screenplay.GivenWhenThen.seeThat(
+                        ElMensaje.deConfirmacion(),
+                        org.hamcrest.Matchers.equalTo(mensajeEsperado)
+                )
+        );
     }
 }
