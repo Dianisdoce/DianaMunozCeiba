@@ -18,6 +18,9 @@ dependencies {
 }
 
 test {
+    filter {
+        includeTestsMatching "com.saucedemo.runners.Runner"
+    }
     testLogging.showStandardStreams = true
     systemProperties System.getProperties()
 }
