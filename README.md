@@ -23,7 +23,7 @@ User Interfaces: Definición de localizadores (XPaths/CSS) mediante la clase Tar
 
 Questions: Verificaciones de estado para las aserciones de la prueba (ElMensaje).
 
-Pruebas Funcionales y Documentación
+Pruebas Funcionales y Documentación:
 Toda la documentación estratégica se encuentra en la carpeta /documents:
 
 Plan de Pruebas: Estrategia, matriz de casos de prueba (positivos y negativos) y alcance.
